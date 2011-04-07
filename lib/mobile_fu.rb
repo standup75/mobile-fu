@@ -29,7 +29,6 @@ module ActionController
         
       def has_mobile_fu(test_mode = false)
         include ActionController::MobileFu::InstanceMethods
-
         if test_mode 
           before_filter :force_mobile_format
         else
@@ -59,18 +58,14 @@ module ActionController
       # Forces the request format to be :mobile
       
       def force_mobile_format
-        request.format = :mobile
-        session[:mobile_view] = true if session[:mobile_view].nil?
+        determine_format(true)
       end
       
       # Determines the request format based on whether the device is mobile or if
       # the user has opted to use either the 'Standard' view or 'Mobile' view.
       
       def set_mobile_format
-        if is_mobile_device? && !request.xhr?
-          request.format = session[:mobile_view] == false ? :html : :mobile
-          session[:mobile_view] = true if session[:mobile_view].nil?
-        end
+        determine_format(false)
       end
       
       # Returns either true or false depending on whether or not the format of the
@@ -92,6 +87,18 @@ module ActionController
       
       def is_device?(type)
         request.user_agent.to_s.downcase.include?(type.to_s.downcase)
+      end
+      
+      def determine_format(force_it)
+        if (force_it || is_mobile_device?) && !request.xhr? && (request.format === :html) 
+          request.format = session[:mobile_view] == false ? :html : :mobile
+          begin
+            view = lookup_context.find("#{params[:action]}.mobile.erb", params[:controller])
+            session[:mobile_view] = true if session[:mobile_view].nil?
+          rescue Exception => exc
+            request.format = :html
+          end
+        end
       end
     end
     

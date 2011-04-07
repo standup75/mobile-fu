@@ -1,3 +1,10 @@
+= About this branch
+
+I've added a check, so that if the :mobile.erb template does not exist, the format would fall back to :html
+All the mojic is done via:
+
+    lookup_context.find("#{params[:action]}.mobile.erb", params[:controller])
+
 = Mobile Fu
 
 Want to automatically detect mobile devices that access your Rails application?  
